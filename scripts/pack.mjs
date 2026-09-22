@@ -16,6 +16,8 @@ let sourceSha = null
 try { sourceSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() } catch {}
 if (sourceSha) manifest.gitHead = sourceSha
 for (const name of ['README.md', 'LICENSE', 'dist']) await cp(resolve(root, name), resolve(stage, name), { recursive: true })
+await mkdir(resolve(stage, 'scripts'))
+await cp(resolve(root, 'scripts/atlas-cli.mjs'), resolve(stage, 'scripts/atlas-cli.mjs'))
 await writeFile(resolve(stage, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`)
 const [packed] = JSON.parse(execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', artifacts], { cwd: stage, encoding: 'utf8' }))
 validatePackageFiles(packed.files)

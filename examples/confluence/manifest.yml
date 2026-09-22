@@ -1,0 +1,31 @@
+modules:
+  macro:
+    - key: shizuha-atlas
+      resource: viewer
+      title: Shizuha Atlas
+      description: Explore and edit a portable system architecture document.
+      layout: block
+      config:
+        resource: editor
+        viewportSize: max
+        title: Edit Shizuha Atlas
+resources:
+  - key: viewer
+    path: static/viewer
+  - key: editor
+    path: static/editor
+permissions:
+  scopes:
+    - read:page:confluence
+    - write:page:confluence
+    - read:attachment:confluence
+    - read:content-details:confluence
+    - write:attachment:confluence
+    - delete:attachment:confluence
+  content:
+    styles:
+      - unsafe-inline
+app:
+  runtime:
+    name: nodejs22.x
+  id: ari:cloud:ecosystem::app/00000000-0000-0000-0000-000000000000

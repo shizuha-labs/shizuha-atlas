@@ -45,6 +45,10 @@ jobs:
           npm ci --no-fund --registry "$VERDACCIO_REGISTRY"
           npm run verify
           npm run build:demo
+          cd examples/confluence
+          npm ci --no-fund --registry "$VERDACCIO_REGISTRY"
+          npm test
+          npm run build
 
       - name: Publish only the verified artifact internally
         shell: bash

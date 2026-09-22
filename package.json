@@ -1,7 +1,7 @@
 {
   "name": "@shizuha/atlas",
-  "version": "0.1.0",
-  "description": "A reusable semantic architecture explorer with expandable maps and host-provided diagram lenses.",
+  "version": "0.2.0",
+  "description": "A portable visual system-design editor and semantic architecture explorer for people and agents.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -17,10 +17,15 @@
       "import": "./dist/core.mjs",
       "require": "./dist/core.cjs"
     },
+    "./portable": {
+      "types": "./dist/portable.d.ts",
+      "import": "./dist/portable.mjs"
+    },
     "./styles.css": "./dist/atlas.css",
     "./package.json": "./package.json"
   },
-  "files": ["dist"],
+  "files": ["dist", "scripts/atlas-cli.mjs"],
+  "bin": {"atlas": "scripts/atlas-cli.mjs"},
   "sideEffects": ["**/*.css"],
   "scripts": {
     "build": "node scripts/build.mjs",

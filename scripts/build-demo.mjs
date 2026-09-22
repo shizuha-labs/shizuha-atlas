@@ -1,5 +1,5 @@
 import { build } from 'esbuild'
-import { copyFile, mkdir, rm } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 
@@ -27,3 +27,8 @@ for (const [name, entry] of Object.entries(result.metafile.outputs)) {
 }
 await copyFile(resolve(root, 'examples/standalone/index.html'), resolve(output, 'index.html'))
 console.log('Built offline viewer: artifacts/demo/index.html, app.js and app.css. Open index.html directly; no server required.')
+const { createAtlasDocument, createAtlasPortableHtml } = await import('../dist/core.mjs')
+const { script, style } = await import('../dist/portable.mjs')
+const model = JSON.parse(await readFile(resolve(root, 'examples/sample-model.json'), 'utf8'))
+await writeFile(resolve(output, 'editor.html'), createAtlasPortableHtml(createAtlasDocument(model), { script, style, title: 'Atlas offline design studio' }))
+console.log('Built self-contained editable file: artifacts/demo/editor.html. It can save another editable HTML file without any server.')

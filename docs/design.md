@@ -2,12 +2,20 @@
 
 ## Current release
 
-Version 0.1 is a viewer and navigation library, not a visual editor. It renders a
-host-supplied versioned model without an Atlas server. Hosts can provide native
-diagram lenses. This release does not claim node creation, edge editing, persistence,
-undo, concurrent editing or an installed Confluence integration.
+Version 0.2 is a visual editor, portable document engine and navigation library.
+People and agents use the same atomic, revision-checked operations. Nodes, typed
+relationships, containment, layout, flows and saved views have stable identities.
+History uses bounded snapshots with monotonic revisions. Hosts supply persistence;
+the library does not require an Atlas server. The bundled offline editor can save
+its complete runtime and current graph as one HTML file.
 
-## Target architecture
+Wiki integration persists documents in ordinary permissioned, versioned pages.
+Confluence has a separate Forge example; source availability is not proof that the
+app is installed in a customer's tenant. Real-time concurrent merging, executable
+infrastructure provisioning and lossless conversion of every diagram language are
+not claimed. Revision conflicts are explicit and preserve the caller's local draft.
+
+## Architecture
 
 The product direction is a portable architecture document that humans can edit
 visually and agents can edit through the same validated operations. The document,
@@ -33,9 +41,10 @@ not a canvas component or a service database, is the source of truth.
 - A collaboration service can optionally synchronize operations, permissions and
   revision history. Its absence must not prevent offline rendering or local editing.
 
-The existing `schema_version: 1` model remains the current contract. Future editable
-document fields need an explicit schema version and migration policy; do not silently
-reinterpret existing stored models or promise lossless import of arbitrary diagrams.
+The existing `schema_version: 1` model remains the semantic contract, wrapped in
+`format: "shizuha-atlas", version: 1` with a revision, layout positions and views.
+See `document-format.md` for the validated format and supported operations. Importing
+a legacy model upgrades it to a document; unknown future versions are rejected.
 
 ## Offline embedding
 

@@ -14,7 +14,7 @@ test('artifact policy rejects private topology and credentials, not neutral exam
 })
 
 test('file allowlist rejects unexpected or missing artifact entries', () => {
-  const names = ['package.json', 'README.md', 'LICENSE', 'dist/index.mjs', 'dist/index.cjs', 'dist/index.d.ts', 'dist/core.mjs', 'dist/core.cjs', 'dist/core.d.ts', 'dist/atlas.css']
+  const names = ['package.json', 'README.md', 'LICENSE', 'dist/index.mjs', 'dist/index.cjs', 'dist/index.d.ts', 'dist/core.mjs', 'dist/core.cjs', 'dist/core.d.ts', 'dist/atlas.css', 'dist/portable.mjs', 'dist/portable.d.ts', 'scripts/atlas-cli.mjs']
   const files = names.map(path => ({ path, size: 100 }))
   assert.doesNotThrow(() => validatePackageFiles(files))
   assert.throws(() => validatePackageFiles(files.slice(1)))

@@ -1,0 +1,8 @@
+html, body, #root { margin: 0; min-height: 100%; font-family: system-ui, sans-serif; background: #080f1d; color: #e2e8f0; }
+.atlas-offline-shell { --atlas-height: calc(100dvh - 110px); --atlas-min-height: 480px; }
+.atlas-offline-header { display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-bottom: 1px solid #263247; }
+.atlas-offline-header > div { flex: 1; }
+.atlas-offline-header strong { font-size: 17px; }
+.atlas-offline-header p { max-width: 900px; color: #94a3b8; font-size: 12px; line-height: 1.5; margin: 6px 0 0; }
+.atlas-offline-header button { background: #172338; color: #e2e8f0; border: 1px solid #475569; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
+@media (max-width: 760px) { .atlas-offline-header { flex-wrap: wrap; padding: 12px; } .atlas-offline-header > div { flex-basis: 100%; } }

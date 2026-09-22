@@ -23,6 +23,7 @@ export interface AtlasEdge {
   target: string
   kind: string
   label: string
+  description?: string
   sources: AtlasSource[]
   status: AtlasEvidenceStatus
 }
@@ -109,6 +110,73 @@ export interface AtlasViewport {
   y: number
   zoom: number
 }
+
+export interface AtlasSavedView {
+  id: string
+  label: string
+  state?: Partial<Omit<AtlasViewState, 'expanded'>> & { expanded?: string[]; editor_scope?: string; editor_deep?: boolean }
+  viewport?: AtlasViewport
+}
+
+export interface AtlasDocument {
+  format: 'shizuha-atlas'
+  version: 1
+  revision: number
+  model: AtlasModel
+  layout: { positions: Record<string, { x: number; y: number }> }
+  views: AtlasSavedView[]
+}
+
+export type AtlasOperation =
+  | { type: 'node.add'; node: Pick<AtlasNode, 'id' | 'label' | 'kind' | 'parent_id'> & Partial<AtlasNode> }
+  | { type: 'node.update'; id: string; changes: Partial<Omit<AtlasNode, 'id' | 'parent_id'>> }
+  | { type: 'node.reparent'; id: string; parent_id: string }
+  | { type: 'node.remove'; id: string; cascade?: boolean }
+  | { type: 'edge.add'; edge: Pick<AtlasEdge, 'id' | 'source' | 'target' | 'kind'> & Partial<AtlasEdge> }
+  | { type: 'edge.update'; id: string; changes: Partial<Omit<AtlasEdge, 'id'>> }
+  | { type: 'edge.remove'; id: string; cascade?: boolean }
+  | { type: 'layout.set'; positions: Record<string, { x: number; y: number } | null> }
+  | { type: 'document.update'; changes: { title?: string; description?: string } }
+  | { type: 'document.replace'; document: AtlasDocument }
+  | { type: 'flow.upsert'; flow: AtlasFlow }
+  | { type: 'flow.remove'; id: string }
+  | { type: 'view.upsert'; view: AtlasSavedView }
+  | { type: 'view.remove'; id: string }
+
+export interface AtlasOperationEnvelope {
+  base_revision: number
+  operations: AtlasOperation[]
+}
+
+export interface AtlasHistory {
+  document: AtlasDocument
+  past: AtlasDocument[]
+  future: AtlasDocument[]
+}
+
+export function createAtlasDocument(model?: AtlasModel): AtlasDocument
+export function validateAtlasDocument(document: AtlasDocument): AtlasDocument
+export function parseAtlasDocument(input: string): AtlasDocument
+export function serializeAtlasDocument(document: AtlasDocument): string
+export function applyAtlasOperations(document: AtlasDocument, envelope: AtlasOperationEnvelope): AtlasDocument
+export function createAtlasHistory(document?: AtlasDocument): AtlasHistory
+export function commitAtlasHistory(history: AtlasHistory, envelope: AtlasOperationEnvelope): AtlasHistory
+export function undoAtlasHistory(history: AtlasHistory): AtlasHistory
+export function redoAtlasHistory(history: AtlasHistory): AtlasHistory
+export function encodeAtlasDocument(document: AtlasDocument): string
+export function importAtlasCodeBlock(text: string): AtlasDocument
+export function exportAtlasCodeBlock(document: AtlasDocument): string
+export function createAtlasPortableHtml(document: AtlasDocument, options: { script: string; style?: string; title?: string }): string
+export function createAtlasEmbedAdapter(options: {
+  window: Pick<Window, 'addEventListener' | 'removeEventListener'>
+  hostWindow: Pick<Window, 'postMessage'>
+  origin: string
+  nonce: string
+  getDocument: () => AtlasDocument
+  onLoad: (document: AtlasDocument) => void
+  onSaveAck?: (result: { revision: number; document: AtlasDocument }) => void | Promise<void>
+  onError?: (error: unknown) => void
+}): { notifyChange(): string; requestSave(): string; dispose(): void }
 
 export function indexAtlas(model: AtlasModel): AtlasIndex
 export function ancestorsOf(index: AtlasIndex, nodeId: string): string[]

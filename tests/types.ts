@@ -1,5 +1,7 @@
 import { AtlasExplorer, atlasFocus, indexAtlas, parseAtlasState, shareAtlasView, type AtlasModel } from '@shizuha/atlas'
-import { expansionState } from '@shizuha/atlas/core'
+import { expansionState, createAtlasDocument, applyAtlasOperations, createAtlasPortableHtml } from '@shizuha/atlas/core'
+import { AtlasEditor } from '@shizuha/atlas'
+import { script, style } from '@shizuha/atlas/portable'
 
 declare const model: AtlasModel
 const index = indexAtlas(model)
@@ -12,3 +14,6 @@ AtlasExplorer({
   onShareView: async ({ search, url }) => { new URL(url).search = search },
 })
 shareAtlasView({ search: 'node=example', locationHref: 'https://example.org', onShareView: async () => {} })
+const document = createAtlasDocument(model)
+const edited = applyAtlasOperations(document, { base_revision: document.revision, operations: [{ type: 'document.update', changes: { title: 'Updated system' } }] })
+AtlasEditor({ document: edited, onSave: async next => { createAtlasPortableHtml(next, { script, style }) } })

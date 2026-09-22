@@ -1,5 +1,5 @@
 import { build } from 'esbuild'
-import { copyFile, mkdir, readFile, rm } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 
@@ -24,7 +24,27 @@ for (const format of ['esm', 'cjs']) {
     logLevel: 'warning',
   })
 }
-for (const name of ['index.d.ts', 'core.d.ts', 'atlas.css']) {
+for (const name of ['index.d.ts', 'core.d.ts']) {
   await copyFile(resolve(root, 'src', name), resolve(root, 'dist', name))
 }
-console.log('Built ESM, CommonJS, types and scoped styles.')
+await writeFile(resolve(root, 'dist/atlas.css'), (await Promise.all(['atlas.css', 'editor.css'].map(name => readFile(resolve(root, 'src', name), 'utf8')))).join('\n'))
+const portable = await build({
+  absWorkingDir: root,
+  entryPoints: ['examples/editor/main.jsx'],
+  outfile: 'dist/portable-runtime.js',
+  bundle: true,
+  write: false,
+  platform: 'browser',
+  target: 'es2022',
+  format: 'iife',
+  jsx: 'automatic',
+  minify: true,
+  define: { 'process.env.NODE_ENV': '"production"' },
+  legalComments: 'inline',
+  logLevel: 'warning',
+})
+const script = portable.outputFiles.find(file => file.path.endsWith('.js')).text
+const style = portable.outputFiles.find(file => file.path.endsWith('.css')).text
+await writeFile(resolve(root, 'dist/portable.mjs'), `export const script = ${JSON.stringify(script)};\nexport const style = ${JSON.stringify(style)};\n`)
+await writeFile(resolve(root, 'dist/portable.d.ts'), 'export declare const script: string;\nexport declare const style: string;\n')
+console.log('Built ESM, CommonJS, types, scoped styles and the offline editor runtime.')
