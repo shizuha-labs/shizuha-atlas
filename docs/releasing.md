@@ -11,6 +11,14 @@ Required repository secrets:
 - `VERDACCIO_REGISTRY`: approved internal registry URL reachable from `deploy-lane`.
 - `VERDACCIO_TOKEN`: internal publisher token, available only to the publication step.
 
+The Forgejo repository-secrets API accepts the original string in the JSON `data`
+field. It does not decode Base64: encoding a token or registry URL before this PUT
+stores the encoded text as the actual secret and breaks its consumer. Check the
+deployed Swagger schema before provisioning, keep credentials in memory, and verify
+Git access with an invalid-credential negative control in the clean CI container.
+Repair an incorrectly serialized secret using the same original credential; do not
+rotate it. Secret-name metadata confirms existence, not usable secret contents.
+
 The publisher refuses other registries, rejects dirty tracked inputs, checks package
 identity and digest, and never overwrites a published version. An exact artifact
 replay is a verified no-op; changed content requires a new version. Registry errors

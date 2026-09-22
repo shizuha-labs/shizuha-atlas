@@ -24,6 +24,7 @@
   "sideEffects": ["**/*.css"],
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:demo": "node scripts/build-demo.mjs",
     "typecheck": "tsc --noEmit --strict --skipLibCheck --module NodeNext --moduleResolution NodeNext tests/types.ts",
     "test": "npm run build && node --test tests/*.test.mjs",
     "pack:check": "node scripts/pack.mjs",

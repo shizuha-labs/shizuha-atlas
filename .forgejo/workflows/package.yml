@@ -44,6 +44,7 @@ jobs:
           timeout 20 npm ping --registry "$VERDACCIO_REGISTRY" --fetch-retries=0 --fetch-timeout=15000
           npm ci --no-fund --registry "$VERDACCIO_REGISTRY"
           npm run verify
+          npm run build:demo
 
       - name: Publish only the verified artifact internally
         shell: bash
