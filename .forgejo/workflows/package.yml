@@ -1,0 +1,57 @@
+name: package
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: atlas-package-main
+  cancel-in-progress: false
+
+jobs:
+  verify-and-publish:
+    runs-on: deploy-lane
+    container: node:22-bookworm
+    steps:
+      - name: Checkout the exact main commit
+        shell: bash
+        env:
+          GIT_PASSWORD: ${{ secrets.GIT_PASSWORD }}
+          EVENT_REF: ${{ github.ref }}
+          EVENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          test "$EVENT_REF" = refs/heads/main
+          [[ "$EVENT_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test -n "${GIT_PASSWORD:-}"
+          ASKPASS=$(mktemp)
+          trap 'rm -f "$ASKPASS"' EXIT
+          printf '%s\n' '#!/bin/sh' 'case "$1" in *Username*) printf "%s\n" x-token-auth ;; *) printf "%s\n" "$GIT_PASSWORD" ;; esac' > "$ASKPASS"
+          chmod 700 "$ASKPASS"
+          git init .
+          git remote add origin https://origin.shizuha.com/shizuha-labs/shizuha-atlas.git
+          GIT_ASKPASS="$ASKPASS" GIT_TERMINAL_PROMPT=0 git fetch --no-tags --depth=50 origin "$EVENT_REF"
+          git checkout --detach "$EVENT_SHA"
+          test "$(git rev-parse HEAD)" = "$EVENT_SHA"
+
+      - name: Test, build and verify the package artifact
+        shell: bash
+        env:
+          VERDACCIO_REGISTRY: ${{ secrets.VERDACCIO_REGISTRY }}
+        run: |
+          set -euo pipefail
+          node --input-type=module -e "import { validateRegistry } from './scripts/package-policy.mjs'; validateRegistry(process.env.VERDACCIO_REGISTRY)"
+          timeout 20 npm ping --registry "$VERDACCIO_REGISTRY" --fetch-retries=0 --fetch-timeout=15000
+          npm ci --no-fund --registry "$VERDACCIO_REGISTRY"
+          npm run verify
+
+      - name: Publish only the verified artifact internally
+        shell: bash
+        env:
+          VERDACCIO_REGISTRY: ${{ secrets.VERDACCIO_REGISTRY }}
+          VERDACCIO_TOKEN: ${{ secrets.VERDACCIO_TOKEN }}
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          npm run publish:internal
