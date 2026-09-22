@@ -3,6 +3,20 @@ import assert from 'node:assert/strict'
 import { descendantIds, scopedNodes, automaticPositions, copySelection, pasteOperations, isTypingTarget, installAtlasLeaveGuard } from '../src/components/editor/editorGraph.js'
 import { createAtlasDocument, createAtlasHistory, commitAtlasHistory, undoAtlasHistory, redoAtlasHistory, serializeAtlasDocument, parseAtlasDocument } from '../src/utils/atlasDocument.js'
 import { exportAtlasCodeBlock, importAtlasCodeBlock } from '../src/utils/atlasPortable.js'
+import { createElement } from 'react'
+import { renderToString } from 'react-dom/server'
+import { AtlasEditor } from '../dist/index.mjs'
+
+test('restored drafts retain an unsaved baseline and enabled Save action', () => {
+  const savedDocument = createAtlasDocument()
+  const changed = commitAtlasHistory(createAtlasHistory(savedDocument), { base_revision: 0, operations: [{ type: 'document.update', changes: { title: 'Recovered draft' } }] }).document
+  const recovered = renderToString(createElement(AtlasEditor, { document: changed, savedDocument, onSave: () => {} }))
+  assert.match(recovered, /Unsaved changes/)
+  assert.match(recovered, /<button class="atlas-edit-primary">/)
+  const acknowledged = renderToString(createElement(AtlasEditor, { document: changed, savedDocument: changed, onSave: () => {} }))
+  assert.match(acknowledged, /All changes saved/)
+  assert.match(acknowledged, /<button class="atlas-edit-primary" disabled=""/)
+})
 
 const document = {
   model: { nodes: [

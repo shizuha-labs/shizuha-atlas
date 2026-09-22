@@ -44,14 +44,14 @@ function Inspector({ item, isEdge, model, disabled, onApply, onDelete, onExplore
   </form>
 }
 
-function EditorCanvas({ document: incoming, onChange, onSave, readOnly = false, saving = false, saveError = '', onExport }) {
+function EditorCanvas({ document: incoming, savedDocument, onChange, onSave, readOnly = false, saving = false, saveError = '', onExport }) {
   const [history, setHistory] = useState(() => createAtlasHistory(incoming))
   const current = history.document
   const historyRef = useRef(history)
   historyRef.current = history
   const lastIncoming = useRef(incoming)
   const lastEmitted = useRef(incoming)
-  const [savedValue, setSavedValue] = useState(() => serializeAtlasDocument(incoming))
+  const [savedValue, setSavedValue] = useState(() => serializeAtlasDocument(savedDocument || incoming))
   const [scope, setScope] = useState(() => incoming.model.nodes.find(node => node.parent_id === null).id)
   const [deep, setDeep] = useState(false)
   const [selected, setSelected] = useState([])
@@ -78,13 +78,17 @@ function EditorCanvas({ document: incoming, onChange, onSave, readOnly = false, 
   const dirty = currentValue !== savedValue
 
   useEffect(() => {
+    if (savedDocument) setSavedValue(serializeAtlasDocument(savedDocument))
+  }, [savedDocument])
+
+  useEffect(() => {
     if (incoming === lastIncoming.current) return
     lastIncoming.current = incoming
     if (incoming === lastEmitted.current || serializeAtlasDocument(incoming) === serializeAtlasDocument(lastEmitted.current)) return
     try {
       const next = createAtlasHistory(incoming)
       setHistory(next)
-      setSavedValue(serializeAtlasDocument(incoming))
+      setSavedValue(serializeAtlasDocument(savedDocument || incoming))
       setSelected([])
       setSelectedEdge('')
       setNotice('Document refreshed from host.')

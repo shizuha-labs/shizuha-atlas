@@ -16,6 +16,7 @@ export function AtlasExplorer(props: AtlasExplorerProps): ReactElement
 
 export interface AtlasEditorProps {
   document: AtlasDocument
+  savedDocument?: AtlasDocument
   onChange?: (document: AtlasDocument) => void
   onSave?: (document: AtlasDocument) => unknown | Promise<unknown>
   readOnly?: boolean

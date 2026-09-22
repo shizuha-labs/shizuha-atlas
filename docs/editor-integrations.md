@@ -125,6 +125,11 @@ are deduplicated and processed serially; malformed save ACKs do not mark anythin
 saved. Sessions cap message size, queue depth and accepted mutation IDs. Recreate
 the adapter with a fresh nonce when reconnecting; call `dispose()` on unmount.
 
+Hosts restoring an unsaved draft should pass `savedDocument` alongside the current
+`document` to `AtlasEditor`. This baseline keeps the dirty indicator, Save action
+and browser-leave warning accurate. Advance it only after acknowledged persistence;
+restoring a draft must retain its original server version for conflict detection.
+
 ## Confluence Cloud: packaged Forge macro
 
 A feasible integration is a Forge macro whose `resource` is a packaged Custom UI

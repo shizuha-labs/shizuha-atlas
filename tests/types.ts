@@ -16,4 +16,4 @@ AtlasExplorer({
 shareAtlasView({ search: 'node=example', locationHref: 'https://example.org', onShareView: async () => {} })
 const document = createAtlasDocument(model)
 const edited = applyAtlasOperations(document, { base_revision: document.revision, operations: [{ type: 'document.update', changes: { title: 'Updated system' } }] })
-AtlasEditor({ document: edited, onSave: async next => { createAtlasPortableHtml(next, { script, style }) } })
+AtlasEditor({ document: edited, savedDocument: document, onSave: async next => { createAtlasPortableHtml(next, { script, style }) } })

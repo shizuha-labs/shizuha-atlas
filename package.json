@@ -1,6 +1,6 @@
 {
   "name": "@shizuha/atlas",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A portable visual system-design editor and semantic architecture explorer for people and agents.",
   "type": "module",
   "main": "./dist/index.cjs",
