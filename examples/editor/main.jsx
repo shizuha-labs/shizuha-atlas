@@ -5,6 +5,7 @@ import { AtlasEditor, AtlasExplorer, createAtlasPortableHtml, parseAtlasDocument
 import '@xyflow/react/dist/style.css'
 import '../../src/atlas.css'
 import '../../src/editor.css'
+import '../../src/diagrams.css'
 import './standalone.css'
 
 function OfflineEditor({ initial }) {

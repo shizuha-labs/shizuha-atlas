@@ -2,6 +2,7 @@ import { build } from 'esbuild'
 import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
+import { mermaidPlugin } from './mermaid-plugin.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 const output = resolve(root, 'artifacts/demo')
@@ -21,6 +22,7 @@ const result = await build({
   legalComments: 'eof',
   metafile: true,
   logLevel: 'warning',
+  plugins: [await mermaidPlugin()],
 })
 for (const [name, entry] of Object.entries(result.metafile.outputs)) {
   if (entry.imports.some(dependency => dependency.external)) throw new Error(`Offline demo has an external dependency: ${name}`)

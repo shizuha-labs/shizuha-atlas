@@ -125,7 +125,40 @@ export interface AtlasDocument {
   model: AtlasModel
   layout: { positions: Record<string, { x: number; y: number }> }
   views: AtlasSavedView[]
+  diagrams?: AtlasDiagram[]
 }
+
+export interface AtlasDiagram {
+  id: string
+  title: string
+  source: string
+  node_id?: string | null
+}
+
+export interface AtlasNavigationRequest {
+  id: string
+  action: 'focus' | 'zen' | 'expand' | 'collapse_all' | 'expand_all' | 'fit_view' | 'overview' | 'journey'
+  nodeId?: string
+  flowId?: string
+}
+export interface AtlasNavigationResult { id: string; ok: boolean; error?: string }
+export function validateAtlasNavigationRequest(request: AtlasNavigationRequest, model: AtlasModel): AtlasNavigationRequest
+
+export interface AtlasMergeConflict {
+  path: string
+  kind: 'field' | 'delete_edit' | 'concurrent_add' | 'invalid_document' | 'identity' | 'revision' | 'invalid_merge'
+  message: string
+  base?: unknown
+  local?: unknown
+  remote?: unknown
+}
+export type AtlasMergeResult = { document: AtlasDocument; conflicts: [] } | { document: null; conflicts: AtlasMergeConflict[] }
+export function mergeAtlasDocuments(input: { base: AtlasDocument; local: AtlasDocument; remote: AtlasDocument }): AtlasMergeResult
+
+export const MERMAID_TEMPLATES: ReadonlyArray<{ id: string; label: string; source: string }>
+export function validateAtlasDiagrams(diagrams: AtlasDiagram[] | undefined, nodeIds: Set<string>): void
+export function assertSafeMermaidSource(source: string): string
+export function exportMermaidSource(diagram: AtlasDiagram): string
 
 export type AtlasOperation =
   | { type: 'node.add'; node: Pick<AtlasNode, 'id' | 'label' | 'kind' | 'parent_id'> & Partial<AtlasNode> }
@@ -142,6 +175,9 @@ export type AtlasOperation =
   | { type: 'flow.remove'; id: string }
   | { type: 'view.upsert'; view: AtlasSavedView }
   | { type: 'view.remove'; id: string }
+  | { type: 'diagram.add'; diagram: AtlasDiagram }
+  | { type: 'diagram.update'; id: string; changes: Partial<Omit<AtlasDiagram, 'id'>> }
+  | { type: 'diagram.remove'; id: string }
 
 export interface AtlasOperationEnvelope {
   base_revision: number

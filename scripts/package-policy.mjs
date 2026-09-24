@@ -17,9 +17,11 @@ export function assertPublicContent(name, content) {
 
 export function validatePackageFiles(files) {
   const required = new Set(['package.json', 'README.md', 'LICENSE', 'dist/index.mjs', 'dist/index.cjs', 'dist/index.d.ts', 'dist/core.mjs', 'dist/core.cjs', 'dist/core.d.ts', 'dist/atlas.css', 'dist/portable.mjs', 'dist/portable.d.ts', 'scripts/atlas-cli.mjs'])
+  const bundledDiagramRuntimes = new Set(['dist/index.mjs', 'dist/index.cjs', 'dist/portable.mjs'])
   for (const file of files) {
     if (!required.delete(file.path)) throw new Error(`Unexpected package file: ${file.path}`)
-    if (!Number.isSafeInteger(file.size) || file.size < 1 || file.size > 4 * 1024 * 1024) throw new Error(`Invalid package file size: ${file.path}`)
+    const maximum = (bundledDiagramRuntimes.has(file.path) ? 8 : 4) * 1024 * 1024
+    if (!Number.isSafeInteger(file.size) || file.size < 1 || file.size > maximum) throw new Error(`Invalid package file size: ${file.path}`)
   }
   if (required.size) throw new Error(`Missing package files: ${[...required].join(', ')}`)
 }

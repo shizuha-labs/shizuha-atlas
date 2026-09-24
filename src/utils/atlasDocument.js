@@ -1,4 +1,5 @@
 import { safeSourceUrl } from './atlasGraph.js'
+import { validateAtlasDiagrams } from './atlasDiagrams.js'
 
 const LIMITS = { bytes: 8 * 1024 * 1024, depth: 64, nodes: 5000, edges: 20000, operations: 1000, history: 100 }
 const FORBIDDEN = new Set(['__proto__', 'constructor', 'prototype'])
@@ -191,6 +192,7 @@ export function validateAtlasDocument(document) {
     position(coordinates, 'Node position')
   }
   validateViews(document.views, nodeIds, flowIds)
+  try { validateAtlasDiagrams(document.diagrams, nodeIds) } catch (error) { fail(error.message) }
   return document
 }
 
@@ -265,7 +267,9 @@ function removeNode(document, operation) {
   const incident = new Set(document.model.edges.filter(edge => removed.has(edge.source) || removed.has(edge.target)).map(edge => edge.id))
   const flowReferences = document.model.flows.some(flow => flow.steps.some(step => removed.has(step.source) || removed.has(step.target)))
   const viewReferences = document.views.some(view => removed.has(view.state?.selected) || removed.has(view.state?.zen) || view.state?.expanded?.some(nodeId => removed.has(nodeId)))
-  if (operation.cascade !== true && (removed.size > 1 || incident.size || flowReferences || viewReferences)) fail('Node has dependents; specify cascade: true', 'DEPENDENCY_CONFLICT')
+  const diagramReferences = document.diagrams?.some(diagram => removed.has(diagram.node_id))
+  if (operation.cascade !== true && (removed.size > 1 || incident.size || flowReferences || viewReferences || diagramReferences)) fail('Node has dependents; specify cascade: true', 'DEPENDENCY_CONFLICT')
+  for (const diagram of document.diagrams || []) if (removed.has(diagram.node_id)) diagram.node_id = null
   document.model.nodes = document.model.nodes.filter(candidate => !removed.has(candidate.id))
   removeEdges(document, incident)
   for (const flow of document.model.flows) flow.steps = flow.steps.filter(step => !removed.has(step.source) && !removed.has(step.target))
@@ -344,6 +348,17 @@ function operate(document, operation) {
     case 'view.remove':
       find(document.views, operation.id, 'View')
       document.views = document.views.filter(view => view.id !== operation.id)
+      break
+    case 'diagram.add':
+      record(operation.diagram, 'Diagram')
+      document.diagrams = [...(document.diagrams || []), operation.diagram]
+      break
+    case 'diagram.update':
+      changes(find(document.diagrams || [], operation.id, 'Diagram'), operation.changes)
+      break
+    case 'diagram.remove':
+      find(document.diagrams || [], operation.id, 'Diagram')
+      document.diagrams = document.diagrams.filter(diagram => diagram.id !== operation.id)
       break
     case 'document.replace': {
       validateAtlasDocument(operation.document)

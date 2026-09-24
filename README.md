@@ -8,7 +8,11 @@ Version 0.2 adds visual node and relationship authoring, nested components, drag
 copy/paste, undo/redo, validated import/export, and a revision-safe agent CLI. A host can
 persist the portable document using its existing permissions and version history.
 Self-contained HTML files remain editable without a server or internet connection.
-Simultaneous editing uses explicit revision conflicts, not real-time multiplayer merging.
+Version 0.3 adds a native Mermaid source studio, isolated offline diagram rendering,
+controlled agent navigation and a validated three-way merge primitive for host-managed
+collaboration. The host still owns permissions, transport, presence and storage CAS;
+conflicting edits are retained for explicit resolution, never silently overwritten.
+See [native diagrams, navigation and merge contracts](docs/native-diagrams.md).
 
 ## Design editor
 
@@ -85,9 +89,10 @@ export function SystemDocumentation({ model, DiagramLibrary }) {
 
 The host fetches and authorizes the model before rendering. It also owns document
 fetching, source permissions, diagram rendering, preferences and error handling.
-There is no bundled company topology, authentication provider, API client or Mermaid
-runtime. `renderDiagramLibrary` is the extension point for native diagram semantics;
-a sequence diagram must not be flattened into a generic architecture graph.
+There is no bundled company topology, authentication provider or host API client.
+The editor includes an isolated Mermaid runtime for native source diagrams;
+`renderDiagramLibrary` remains the explorer extension point for host-provided diagram
+lenses. A sequence diagram must not be flattened into a generic architecture graph.
 
 Unrelated query parameters are preserved during navigation. The host must enforce
 authorization server-side; query parameters are not permission checks. For embedded

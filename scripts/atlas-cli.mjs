@@ -116,6 +116,18 @@ const schema = {
       },
     },
     views: { type: 'array' },
+    diagrams: {
+      type: 'array', maxItems: 100,
+      items: {
+        type: 'object', required: ['id', 'title', 'source'],
+        properties: {
+          id: { type: 'string', pattern: '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$' },
+          title: { type: 'string', minLength: 1, maxLength: 1000 },
+          source: { type: 'string', maxLength: 100000 },
+          node_id: { type: ['string', 'null'] },
+        },
+      },
+    },
   },
 }
 

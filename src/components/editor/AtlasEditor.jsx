@@ -4,6 +4,8 @@ import { Plus, Save, Download, Upload, Undo2, Redo2, Copy, ClipboardPaste, Trash
 import { createAtlasHistory, commitAtlasHistory, undoAtlasHistory, redoAtlasHistory, parseAtlasDocument, serializeAtlasDocument } from '../../utils/atlasDocument.js'
 import { NODE_KINDS, EDGE_KINDS, editorId, descendantIds, scopedNodes, automaticPositions, copySelection, pasteOperations, isTypingTarget, installAtlasLeaveGuard } from './editorGraph.js'
 import DocumentLibrary, { SourcesEditor } from './DocumentLibrary.jsx'
+import MermaidDiagramPanel from './MermaidDiagramPanel.jsx'
+import { validateAtlasNavigationRequest } from '../../utils/atlasAgentNavigation.js'
 
 function EditorNode({ data, selected }) {
   return <div className={`atlas-edit-node ${selected ? 'is-selected' : ''}`}>
@@ -44,7 +46,7 @@ function Inspector({ item, isEdge, model, disabled, onApply, onDelete, onExplore
   </form>
 }
 
-function EditorCanvas({ document: incoming, savedDocument, onChange, onSave, readOnly = false, saving = false, saveError = '', onExport }) {
+function EditorCanvas({ document: incoming, savedDocument, onChange, onSave, readOnly = false, saving = false, saveError = '', onExport, navigationRequest, onNavigationResult }) {
   const [history, setHistory] = useState(() => createAtlasHistory(incoming))
   const current = history.document
   const historyRef = useRef(history)
@@ -62,12 +64,14 @@ function EditorCanvas({ document: incoming, savedDocument, onChange, onSave, rea
   const [pendingDelete, setPendingDelete] = useState(null)
   const [linking, setLinking] = useState(false)
   const [help, setHelp] = useState(false)
+  const [diagramStudio, setDiagramStudio] = useState(false)
   const [panel, setPanel] = useState('properties')
   const [snap, setSnap] = useState(true)
   const [clipboard, setClipboard] = useState(null)
   const [localSaving, setLocalSaving] = useState(false)
   const importInput = useRef(null)
   const container = useRef(null)
+  const consumedNavigation = useRef(new Set())
   const { fitView, setCenter, getViewport, setViewport } = useReactFlow()
   const model = current.model
   const root = model.nodes.find(node => node.parent_id === null)
@@ -204,6 +208,7 @@ function EditorCanvas({ document: incoming, savedDocument, onChange, onSave, rea
   useEffect(() => {
     const element = container.current
     const keydown = event => {
+      if (diagramStudio) return
       if (pendingDelete || help) {
         if (event.key === 'Escape') { event.preventDefault(); setPendingDelete(null); setHelp(false) }
         if (event.key === 'Tab') {
@@ -229,7 +234,7 @@ function EditorCanvas({ document: incoming, savedDocument, onChange, onSave, rea
     }
     element?.addEventListener('keydown', keydown)
     return () => element?.removeEventListener('keydown', keydown)
-  }, [save, undo, redo, copy, paste, duplicate, askDelete, pendingDelete, help])
+  }, [save, undo, redo, copy, paste, duplicate, askDelete, pendingDelete, help, diagramStudio])
   useEffect(() => installAtlasLeaveGuard(window, dirty), [dirty])
 
   const exportDocument = async () => {
@@ -275,9 +280,25 @@ function EditorCanvas({ document: incoming, savedDocument, onChange, onSave, rea
     if (position) setTimeout(() => setCenter(position.x + 125, position.y + 60, { zoom: 1, duration: 250 }), 120)
   }
 
+  useEffect(() => {
+    if (!navigationRequest || consumedNavigation.current.has(navigationRequest.id)) return
+    consumedNavigation.current.add(navigationRequest.id)
+    try {
+      const request = validateAtlasNavigationRequest(navigationRequest, model)
+      if (request.action === 'focus') reveal(model.nodes.find(node => node.id === request.nodeId))
+      else if (request.action === 'expand') openScope(request.nodeId)
+      else if (['overview', 'collapse_all', 'expand_all'].includes(request.action)) { openScope(root.id); setDeep(request.action === 'expand_all') }
+      else if (request.action === 'fit_view') fitView({ padding: .2, duration: 200 })
+      else throw new Error('This action is available in the architecture explorer, not the design canvas')
+      onNavigationResult?.({ id: request.id, ok: true })
+    } catch (failure) { onNavigationResult?.({ id: navigationRequest.id, ok: false, error: failure.message }) }
+  }, [navigationRequest, model, onNavigationResult, root.id, fitView])
+
   return <section className="atlas-editor" ref={container} tabIndex={-1} aria-label="Atlas system design editor">
     <header className="atlas-edit-header"><div className="atlas-edit-heading"><div className="atlas-edit-kicker"><Layers size={13} />SHIZUHA ATLAS <span>DESIGN STUDIO</span></div><input className="atlas-edit-title" aria-label="Document title" key={`${model.id}-${model.title}`} defaultValue={model.title} readOnly={locked} maxLength={200} onBlur={event => { const title = event.target.value.trim(); if (title && title !== model.title) commit([{ type: 'document.update', changes: { title } }]); else event.target.value = model.title }} onKeyDown={event => { if (event.key === 'Enter') event.currentTarget.blur() }} /></div><div className="atlas-edit-document-actions"><span className={`atlas-edit-save-state ${dirty ? 'is-dirty' : ''}`}>{readOnly ? 'Read only' : dirty ? 'Unsaved changes' : 'All changes saved'}<small>revision {current.revision}</small></span><Action label="Import Atlas document" disabled={locked} onClick={() => importInput.current?.click()}><Upload size={16} /></Action><Action label="Export Atlas document" onClick={exportDocument}><Download size={16} /><span>Export</span></Action>{onSave && <button className="atlas-edit-primary" disabled={locked || !dirty} onClick={save}><Save size={15} />{busy ? 'Saving…' : 'Save'}</button>}</div></header>
     <input ref={importInput} type="file" accept=".json,.atlas.json,application/json" hidden onChange={importDocument} />
+    <div className="atlas-diagram-launcher"><button type="button" onClick={() => setDiagramStudio(true)}>Diagram studio <span>{current.diagrams?.length || 0}</span></button><span>Sequence · ER · State · Timeline · Mermaid source</span></div>
+    {diagramStudio && <MermaidDiagramPanel document={current} commit={commit} disabled={locked} scope={activeScope.id} onClose={() => setDiagramStudio(false)} />}
     <div className="atlas-edit-toolbar"><div className="atlas-edit-tool-group"><Action label="Undo" disabled={locked || !history.past.length} onClick={undo}><Undo2 size={16} /></Action><Action label="Redo" disabled={locked || !history.future.length} onClick={redo}><Redo2 size={16} /></Action><span className="atlas-edit-divider" /><Action label="Copy selection" disabled={!selected.length} onClick={copy}><Copy size={16} /></Action><Action label="Paste components" disabled={locked || !clipboard} onClick={() => paste()}><ClipboardPaste size={16} /></Action><Action label="Duplicate selection" disabled={locked || !selected.length} onClick={duplicate}><Copy size={14} /><Plus size={11} /></Action><Action label="Delete selection" disabled={locked || (!selected.length && !selectedEdge)} onClick={askDelete}><Trash2 size={16} /></Action></div><div className="atlas-edit-search"><Search size={15} /><input aria-label="Find component" placeholder="Find a component…" value={search} onChange={event => setSearch(event.target.value)} />{search && <div className="atlas-edit-search-results">{results.length ? results.map(node => <button key={node.id} onClick={() => reveal(node)}><span>{node.label}</span><small>{node.kind}</small></button>) : <p>No components found</p>}</div>}</div><div className="atlas-edit-tool-group"><label className="atlas-edit-check"><input type="checkbox" checked={snap} onChange={event => setSnap(event.target.checked)} />Snap</label><Action label="Auto layout this view" disabled={locked || deep || !visible.length} onClick={() => { if (commit([{ type: 'layout.set', positions: automaticPositions(visible) }])) setTimeout(() => fitView({ padding: .2, duration: 200 }), 80) }}><LayoutGrid size={16} /></Action><Action label="Fit view" onClick={() => fitView({ padding: .2, duration: 200 })}><Maximize size={16} /></Action><Action label="Editor help" onClick={() => setHelp(!help)}><CircleHelp size={16} /></Action></div></div>
     {(error || saveError) && <div className="atlas-edit-alert" role="alert">{error || saveError}<button onClick={() => setError('')} aria-label="Dismiss editor error"><X size={14} /></button></div>}
     {notice && <div className="atlas-edit-notice" role="status">{notice}</div>}

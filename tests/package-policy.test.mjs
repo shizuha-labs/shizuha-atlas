@@ -20,6 +20,9 @@ test('file allowlist rejects unexpected or missing artifact entries', () => {
   assert.throws(() => validatePackageFiles(files.slice(1)))
   assert.throws(() => validatePackageFiles([...files, { path: '.env', size: 20 }]))
   assert.throws(() => validatePackageFiles([...files, files[0]]))
+  assert.doesNotThrow(() => validatePackageFiles(files.map(file => file.path === 'dist/portable.mjs' ? { ...file, size: 6 * 1024 * 1024 } : file)))
+  assert.throws(() => validatePackageFiles(files.map(file => file.path === 'dist/portable.mjs' ? { ...file, size: 8 * 1024 * 1024 + 1 } : file)))
+  assert.throws(() => validatePackageFiles(files.map(file => file.path === 'dist/core.mjs' ? { ...file, size: 4 * 1024 * 1024 + 1 } : file)))
 })
 
 test('same-version publication requires exact verified artifact replay', () => {

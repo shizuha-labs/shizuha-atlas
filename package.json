@@ -1,6 +1,6 @@
 {
   "name": "@shizuha/atlas",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A portable visual system-design editor and semantic architecture explorer for people and agents.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -46,6 +46,7 @@
     "lucide-react": "0.303.0"
   },
   "devDependencies": {
+    "mermaid": "12.0.0",
     "@types/react": "18.3.28",
     "esbuild": "0.25.0",
     "react": "18.3.1",
@@ -53,7 +54,8 @@
     "react-router-dom": "7.18.2",
     "typescript": "5.9.3"
   },
-  "engines": {"node": ">=20"},
+  "overrides": {"lodash-es": "4.18.1"},
+  "engines": {"node": ">=22.12"},
   "license": "MIT",
   "keywords": ["architecture", "diagram", "react", "semantic-zoom", "documentation"]
 }

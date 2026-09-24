@@ -1,0 +1,31 @@
+.atlas-diagrams-backdrop { z-index: 100; padding: 20px; }
+.atlas-diagrams { width: min(1500px, 96vw); height: min(900px, 94vh); display: flex; flex-direction: column; background: #0d1728; color: #e2e8f0; border: 1px solid #334155; border-radius: 16px; box-shadow: 0 24px 100px #0009; overflow: hidden; }
+.atlas-diagrams header { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 18px 22px; border-bottom: 1px solid #334155; }
+.atlas-diagrams h2 { margin: 0 0 6px; font-size: 20px; }
+.atlas-diagrams p { font-size: 12px; color: #94a3b8; line-height: 1.6; margin: 0; }
+.atlas-diagrams button, .atlas-diagrams input, .atlas-diagrams select, .atlas-diagrams textarea { font: inherit; color: inherit; background: #162239; border: 1px solid #334155; border-radius: 6px; padding: 8px 10px; }
+.atlas-diagrams button { cursor: pointer; font-size: 12px; }
+.atlas-diagrams button:hover { border-color: #818cf8; }
+.atlas-diagrams button:disabled { cursor: default; opacity: .45; }
+.atlas-diagrams button[aria-pressed=true] { background: #312e81; border-color: #818cf8; }
+.atlas-diagrams-body { display: flex; flex: 1; min-height: 0; }
+.atlas-diagrams aside { width: 210px; flex-shrink: 0; padding: 16px; border-right: 1px solid #334155; display: flex; flex-direction: column; gap: 10px; overflow: auto; }
+.atlas-diagrams label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #a5b4fc; min-width: 0; }
+.atlas-diagrams nav { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.atlas-diagrams nav button { text-align: left; overflow-wrap: anywhere; }
+.atlas-diagrams main { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; overflow: auto; }
+.atlas-diagram-meta { display: flex; gap: 16px; }
+.atlas-diagram-meta label { flex: 1; }
+.atlas-diagram-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.atlas-diagram-actions span { font-size: 11px; color: #94a3b8; }
+.atlas-diagram-workspace { display: grid; grid-template-columns: minmax(230px, .8fr) minmax(200px, 1.2fr); gap: 14px; flex: 1; min-height: 220px; }
+.atlas-diagram-source textarea { flex: 1; resize: none; line-height: 1.7; font-family: ui-monospace, monospace; font-size: 13px; min-height: 200px; white-space: pre; }
+.atlas-diagram-preview { display: flex; flex-direction: column; border: 1px solid #334155; border-radius: 8px; min-height: 0; overflow: hidden; }
+.atlas-diagram-zoom { display: flex; align-items: center; gap: 6px; padding: 8px; border-bottom: 1px solid #334155; font-size: 12px; }
+.atlas-diagram-image { overflow: auto; flex: 1; padding: 16px; background: #101827; }
+.atlas-diagram-error { color: #fda4af; background: #3b1321; border: 1px solid #9f1239; padding: 10px; border-radius: 6px; font-size: 12px; white-space: pre-wrap; max-height: 120px; overflow: auto; }
+.atlas-diagram-empty { justify-content: center; align-items: center; text-align: center; }
+@media (max-width: 800px) { .atlas-diagrams-backdrop { padding: 4px; } .atlas-diagrams { width: 100vw; height: 98vh; } .atlas-diagrams aside { width: 145px; padding: 8px; } .atlas-diagram-workspace { grid-template-columns: 1fr; min-height: 450px; } .atlas-diagram-meta { flex-direction: column; gap: 8px; } .atlas-diagrams header { padding: 12px; } }
+.atlas-diagram-launcher { display: flex; align-items: center; gap: 12px; padding: 7px 14px; border-bottom: 1px solid #26374e; font-size: 11px; color: #94a3b8; }
+.atlas-diagram-launcher button { color: #c7d2fe; background: #232344; border: 1px solid #464575; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.atlas-diagram-launcher button span { margin-left: 8px; }

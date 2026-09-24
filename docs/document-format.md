@@ -65,6 +65,9 @@ Transactions require an exact base revision. Operations are applied in order to 
 | `flow.remove` | `id` | Removes the flow and clears saved-view references to it. |
 | `view.upsert` | `view` | Adds or replaces a named view. |
 | `view.remove` | `id` | Deletes a saved view. |
+| `diagram.add` | `diagram` | Adds native Mermaid `{id,title,source,node_id?}` without converting the architecture graph. |
+| `diagram.update` | `id`, `changes` | Updates source/title/component association; ID remains immutable. |
+| `diagram.remove` | `id` | Removes one native diagram. |
 | `document.replace` | `document` | Replaces content after full validation, preserving `model.id` and advancing the current revision, not the imported revision. |
 
 Node `kind` and edge `kind` are extensible strings. Self-loop edges are allowed. Evidence status is `declared`, `documented`, or `inferred`. Sources have `{label,type,url}` and optional metadata; URL policy permits ordinary HTTP(S) and site-relative links, not executable schemes, protocol-relative links, or credentials.

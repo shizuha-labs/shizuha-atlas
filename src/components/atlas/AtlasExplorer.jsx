@@ -6,6 +6,7 @@ import AtlasNode from './AtlasNode'
 import AtlasEdge from './AtlasEdge'
 import AtlasInspector from './AtlasInspector'
 import { shareAtlasView } from '../../utils/atlasHost'
+import { validateAtlasNavigationRequest } from '../../utils/atlasAgentNavigation.js'
 import { atlasFocus } from '../../utils/atlasFocus'
 import { expansionState, keyboardPan, minimapSize } from '../../utils/atlasNavigation'
 import { ancestorsOf, collapseNode, flowSelection, indexAtlas, layoutAtlas, parseAtlasState, projectAtlas, revealNodes, serializeAtlasState } from '../../utils/atlasGraph'
@@ -14,7 +15,7 @@ const nodeTypes = { atlas: AtlasNode }
 const edgeTypes = { atlas: AtlasEdge }
 const KIND_COLORS = { http: '#7dd3fc', auth: '#c4b5fd', event: '#fbbf24', inference: '#34d399', storage: '#f9a8d4', data: '#f9a8d4', control: '#a5b4fc', tool: '#2dd4bf', mcp: '#2dd4bf', build: '#fb923c', ci: '#fb923c', sequence: '#cbd5e1' }
 
-function Explorer({ model, renderDiagramLibrary, onOpenSource, onShareView, backHref = '/', backLabel = 'Back to documentation' }) {
+function Explorer({ model, renderDiagramLibrary, onOpenSource, onShareView, backHref = '/', backLabel = 'Back to documentation', navigationRequest, onNavigationResult }) {
   const location = useLocation()
   const navigate = useNavigate()
   const index = useMemo(() => indexAtlas(model), [model])
@@ -30,6 +31,7 @@ function Explorer({ model, renderDiagramLibrary, onOpenSource, onShareView, back
   const latestWrittenSearch = useRef(location.search)
   const initialFocusApplied = useRef(false)
   const canvasRef = useRef(null)
+  const consumedNavigation = useRef(new Set())
   const { fitView, getViewport, setViewport, getZoom, setCenter, zoomIn, zoomOut } = useReactFlow()
   const selection = useMemo(() => flowSelection(model, state.flow, state.step), [model, state.flow, state.step])
   const zen = useMemo(() => atlasFocus(model, state.zen, state.hops, state.direction), [model, state.zen, state.hops, state.direction])
@@ -116,6 +118,30 @@ function Explorer({ model, renderDiagramLibrary, onOpenSource, onShareView, back
     setRelationship(null)
     if (nextSelection.nodeIds.length) focus(nextSelection.nodeIds)
   }, [model, index, focus])
+
+  useEffect(() => {
+    if (!navigationRequest || !initialized || consumedNavigation.current.has(navigationRequest.id)) return
+    consumedNavigation.current.add(navigationRequest.id)
+    try {
+      const request = validateAtlasNavigationRequest(navigationRequest, model)
+      if (request.action === 'focus') {
+        if (request.nodeId === index.root.id) focus([])
+        else selectNode(request.nodeId)
+      } else if (request.action === 'zen') focusZen(request.nodeId)
+      else if (request.action === 'expand') {
+        setState(previous => ({ ...previous, expanded: revealNodes(index, new Set([...previous.expanded, request.nodeId]), [request.nodeId]) }))
+        focus([request.nodeId])
+      } else if (request.action === 'journey') chooseFlow(request.flowId)
+      else if (request.action === 'fit_view') focus([])
+      else {
+        const action = request.action === 'expand_all' ? 'expand' : request.action === 'collapse_all' ? 'collapse' : 'overview'
+        setState(previous => expansionState(index, previous, action))
+        setRelationship(null)
+        focus([])
+      }
+      onNavigationResult?.({ id: request.id, ok: true })
+    } catch (failure) { onNavigationResult?.({ id: navigationRequest.id, ok: false, error: failure.message }) }
+  }, [navigationRequest, initialized, model, index, focus, selectNode, focusZen, chooseFlow, onNavigationResult])
 
   const activeNodeIds = new Set(selection.nodeIds.flatMap(nodeId => [nodeId, ...ancestorsOf(index, nodeId)]))
   const activeEdgeIds = new Set(selection.edgeIds)

@@ -1,9 +1,11 @@
 import type { ReactElement, ReactNode } from 'react'
-import type { AtlasModel, AtlasNode, AtlasDocument } from './core.js'
+import type { AtlasModel, AtlasNode, AtlasDocument, AtlasNavigationRequest, AtlasNavigationResult } from './core.js'
 
 export * from './core.js'
 
 export interface AtlasExplorerProps {
+  navigationRequest?: AtlasNavigationRequest
+  onNavigationResult?: (result: AtlasNavigationResult) => void
   model: AtlasModel
   renderDiagramLibrary?: (context: { model: AtlasModel; node: AtlasNode | null }) => ReactNode
   backHref?: string
@@ -15,6 +17,8 @@ export interface AtlasExplorerProps {
 export function AtlasExplorer(props: AtlasExplorerProps): ReactElement
 
 export interface AtlasEditorProps {
+  navigationRequest?: AtlasNavigationRequest
+  onNavigationResult?: (result: AtlasNavigationResult) => void
   document: AtlasDocument
   savedDocument?: AtlasDocument
   onChange?: (document: AtlasDocument) => void

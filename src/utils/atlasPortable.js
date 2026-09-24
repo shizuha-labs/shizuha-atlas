@@ -41,7 +41,7 @@ export function createAtlasPortableHtml(document, { script, style = '', title = 
   const styles = style.replace(/<\/style/gi, '<\\/style')
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; frame-src 'self' about:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>${htmlText(title)}</title><style id="atlas-style">${styles}</style></head>
 <body><div id="root"></div><script id="atlas-document" type="application/json">${payload}</script><script id="atlas-runtime">${runtime}</script></body></html>`
 }
