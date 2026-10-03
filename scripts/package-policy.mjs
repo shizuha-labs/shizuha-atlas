@@ -15,8 +15,19 @@ export function assertPublicContent(name, content) {
   if (privatePatterns.some(pattern => pattern.test(content))) throw new Error(`Private content is forbidden in ${name}`)
 }
 
-export function validatePackageFiles(files) {
-  const required = new Set(['package.json', 'README.md', 'LICENSE', 'dist/index.mjs', 'dist/index.cjs', 'dist/index.d.ts', 'dist/core.mjs', 'dist/core.cjs', 'dist/core.d.ts', 'dist/atlas.css', 'dist/portable.mjs', 'dist/portable.d.ts', 'scripts/atlas-cli.mjs'])
+export function validatePackageFiles(files, licenses) {
+  const required = new Set(['package.json', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_LICENSES.json', 'dist/index.mjs', 'dist/index.cjs', 'dist/index.d.ts', 'dist/core.mjs', 'dist/core.cjs', 'dist/core.d.ts', 'dist/atlas.css', 'dist/portable.mjs', 'dist/portable.d.ts', 'scripts/atlas-cli.mjs'])
+  if (!Array.isArray(licenses) || licenses.length === 0) throw new Error('A bundled dependency license inventory is required')
+  for (const entry of licenses) {
+    if (!Array.isArray(entry.files) || entry.files.length === 0) throw new Error('Each bundled dependency needs an original license file')
+    for (const name of entry.files) {
+      if (typeof name !== 'string' || !/^LICENSES\/[A-Za-z0-9@_+.-]+\/[A-Za-z0-9_+.-]+$/.test(name)
+          || name.split('/').some(part => part === '.' || part === '..') || required.has(name)) {
+        throw new Error('Invalid or duplicate bundled dependency license path')
+      }
+      required.add(name)
+    }
+  }
   const bundledDiagramRuntimes = new Set(['dist/index.mjs', 'dist/index.cjs', 'dist/portable.mjs'])
   for (const file of files) {
     if (!required.delete(file.path)) throw new Error(`Unexpected package file: ${file.path}`)
