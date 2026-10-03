@@ -1,12 +1,13 @@
 import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
 
-export async function mermaidPlugin() {
+export async function mermaidPlugin(collect = () => {}) {
   const result = await build({
     entryPoints: [fileURLToPath(new URL('../src/utils/mermaidWorker.js', import.meta.url))],
-    bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2022',
+    metafile: true, bundle: true, write: false, format: 'iife', platform: 'browser', target: 'es2022',
     minify: true, legalComments: 'inline', define: { 'process.env.NODE_ENV': '"production"' },
   })
+  collect(result.metafile)
   const runtime = result.outputFiles[0].text
   return {
     name: 'atlas-mermaid-sandbox',

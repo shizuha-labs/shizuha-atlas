@@ -14,15 +14,21 @@ test('artifact policy rejects private topology and credentials, not neutral exam
 })
 
 test('file allowlist rejects unexpected or missing artifact entries', () => {
-  const names = ['package.json', 'README.md', 'LICENSE', 'dist/index.mjs', 'dist/index.cjs', 'dist/index.d.ts', 'dist/core.mjs', 'dist/core.cjs', 'dist/core.d.ts', 'dist/atlas.css', 'dist/portable.mjs', 'dist/portable.d.ts', 'scripts/atlas-cli.mjs']
+  const licenses = [{ name: 'synthetic', version: '1.0.0', files: ['LICENSES/synthetic-1.0.0/LICENSE'] }]
+  const names = ['package.json', 'README.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md', 'THIRD_PARTY_LICENSES.json', 'LICENSES/synthetic-1.0.0/LICENSE', 'dist/index.mjs', 'dist/index.cjs', 'dist/index.d.ts', 'dist/core.mjs', 'dist/core.cjs', 'dist/core.d.ts', 'dist/atlas.css', 'dist/portable.mjs', 'dist/portable.d.ts', 'scripts/atlas-cli.mjs']
   const files = names.map(path => ({ path, size: 100 }))
-  assert.doesNotThrow(() => validatePackageFiles(files))
-  assert.throws(() => validatePackageFiles(files.slice(1)))
-  assert.throws(() => validatePackageFiles([...files, { path: '.env', size: 20 }]))
-  assert.throws(() => validatePackageFiles([...files, files[0]]))
-  assert.doesNotThrow(() => validatePackageFiles(files.map(file => file.path === 'dist/portable.mjs' ? { ...file, size: 6 * 1024 * 1024 } : file)))
-  assert.throws(() => validatePackageFiles(files.map(file => file.path === 'dist/portable.mjs' ? { ...file, size: 8 * 1024 * 1024 + 1 } : file)))
-  assert.throws(() => validatePackageFiles(files.map(file => file.path === 'dist/core.mjs' ? { ...file, size: 4 * 1024 * 1024 + 1 } : file)))
+  const validate = list => validatePackageFiles(list, licenses)
+  assert.doesNotThrow(() => validate(files))
+  assert.throws(() => validate(files.slice(1)))
+  assert.throws(() => validate([...files, { path: '.env', size: 20 }]))
+  assert.throws(() => validate([...files, files[0]]))
+  assert.doesNotThrow(() => validate(files.map(file => file.path === 'dist/portable.mjs' ? { ...file, size: 6 * 1024 * 1024 } : file)))
+  assert.throws(() => validate(files.map(file => file.path === 'dist/portable.mjs' ? { ...file, size: 8 * 1024 * 1024 + 1 } : file)))
+  assert.throws(() => validate(files.map(file => file.path === 'dist/core.mjs' ? { ...file, size: 4 * 1024 * 1024 + 1 } : file)))
+  assert.throws(() => validate(files.filter(file => !file.path.startsWith('LICENSES/'))), /Missing package files/)
+  assert.throws(() => validate([...files, { path: 'LICENSES/unreviewed/LICENSE', size: 100 }]), /Unexpected/)
+  assert.throws(() => validatePackageFiles(files, []), /inventory/)
+  assert.throws(() => validatePackageFiles(files, [{ files: ['LICENSES/../private'] }]), /Invalid/)
 })
 
 test('same-version publication requires exact verified artifact replay', () => {

@@ -2,6 +2,9 @@ node_modules/
 .npm-cache/
 dist/
 artifacts/
+LICENSES/
+THIRD_PARTY_NOTICES.md
+THIRD_PARTY_LICENSES.json
 .npmrc
 *.log
 .env
